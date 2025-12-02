@@ -85,65 +85,40 @@ export default function Home() {
   const veilig = isVeilig()
 
   return (
-    <main style={{
-      background: 'white',
-      borderRadius: '20px',
-      padding: '60px 40px',
-      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-      textAlign: 'center',
-      maxWidth: '600px',
-      width: '100%',
-    }}>
-      <h1 style={{
-        fontSize: '2.5rem',
-        fontWeight: 'bold',
-        marginBottom: '40px',
-        color: '#333',
-        lineHeight: '1.2',
-      }}>
+    <main className="bg-white rounded-[20px] py-16 px-10 shadow-2xl text-center max-w-[600px] w-full">
+      <h1 className="text-4xl font-bold mb-10 text-gray-800 leading-tight">
         Kan ik veilig motor rijden?
       </h1>
 
       {loading && (
-        <div style={{ fontSize: '1.5rem', color: '#666' }}>
+        <div className="text-2xl text-gray-600">
           Weerdata ophalen...
         </div>
       )}
 
       {error && (
-        <div style={{ fontSize: '1.2rem', color: '#d32f2f', marginTop: '20px' }}>
+        <div className="text-xl text-red-600 mt-5">
           {error}
         </div>
       )}
 
       {weather && veilig !== null && (
         <>
-          <div style={{
-            fontSize: '4rem',
-            fontWeight: 'bold',
-            marginTop: '30px',
-            marginBottom: '30px',
-            color: veilig ? '#2e7d32' : '#d32f2f',
-          }}>
+          <div className={`text-7xl font-bold mt-8 mb-8 ${
+            veilig ? 'text-green-700' : 'text-red-600'
+          }`}>
             {veilig ? 'Ja' : 'Nee'}
           </div>
 
-          <div style={{
-            fontSize: '1.1rem',
-            color: '#666',
-            marginTop: '20px',
-            padding: '20px',
-            background: '#f5f5f5',
-            borderRadius: '10px',
-          }}>
-            <div style={{ marginBottom: '10px' }}>
+          <div className="text-lg text-gray-600 mt-5 p-5 bg-gray-100 rounded-lg">
+            <div className="mb-2.5">
               <strong>Temperatuur:</strong> {weather.temp.toFixed(1)}°C
             </div>
-            <div style={{ marginBottom: '10px' }}>
+            <div className="mb-2.5">
               <strong>Weersomstandigheden:</strong> {weather.description}
             </div>
             {!veilig && (
-              <div style={{ marginTop: '15px', color: '#d32f2f', fontWeight: 'bold' }}>
+              <div className="mt-4 text-red-600 font-bold">
                 {weather.temp < 4 
                   ? '⚠️ Temperatuur is onder de 4°C' 
                   : '⚠️ Gladheid door weersomstandigheden'}
