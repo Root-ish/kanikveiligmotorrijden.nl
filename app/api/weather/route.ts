@@ -19,19 +19,18 @@ export async function GET(request: Request) {
     const weatherCode = data.current.weather_code
     
     // Weather codes: https://open-meteo.com/en/docs
-    // Codes die gladheid kunnen veroorzaken: regen, sneeuw, etc.
-    const gladheidCodes = [
-      51, 53, 55, // Lichte/matige/sterke motregen
-      61, 63, 65, // Lichte/matige/sterke regen
-      66, 67, // Bevriezende regen
-      71, 73, 75, // Lichte/matige/sterke sneeuw
-      77, // Sneeuwkorrels
-      80, 81, 82, // Lichte/matige/sterke regenbuien
-      85, 86, // Lichte/sterke sneeuwbuien
-      95, 96, 99 // Onweer
-    ]
+    // Categoriseer verschillende gevaarlijke condities
+    const regenCodes = [51, 53, 55, 61, 63, 65, 80, 81, 82] // Regen en motregen
+    const sneeuwCodes = [71, 73, 75, 77, 85, 86] // Sneeuw en sneeuwbuien
+    const bevriezendeRegenCodes = [66, 67] // Bevriezende regen
+    const mistCodes = [45, 48] // Mist en bevriezende mist
+    const onweerCodes = [95, 96, 99] // Onweer
     
-    const isGlad = gladheidCodes.includes(weatherCode)
+    const heeftRegen = regenCodes.includes(weatherCode)
+    const heeftSneeuw = sneeuwCodes.includes(weatherCode)
+    const heeftBevriezendeRegen = bevriezendeRegenCodes.includes(weatherCode)
+    const heeftMist = mistCodes.includes(weatherCode)
+    const heeftOnweer = onweerCodes.includes(weatherCode)
     
     // Bepaal beschrijving op basis van weather code
     let description = 'Onbekend'
@@ -49,10 +48,15 @@ export async function GET(request: Request) {
     return NextResponse.json({
       temp: temp,
       feelsLike: temp, // Open-Meteo heeft geen feels_like, gebruik temp
-      condition: isGlad ? 'rain' : 'clear',
+      condition: heeftRegen || heeftSneeuw ? 'rain' : 'clear',
       description: description,
       icon: '01d', // Placeholder
-      isGlad: isGlad,
+      weatherCode: weatherCode,
+      heeftRegen: heeftRegen,
+      heeftSneeuw: heeftSneeuw,
+      heeftBevriezendeRegen: heeftBevriezendeRegen,
+      heeftMist: heeftMist,
+      heeftOnweer: heeftOnweer,
     })
   } catch (error) {
     console.error('Weather fetch error:', error)

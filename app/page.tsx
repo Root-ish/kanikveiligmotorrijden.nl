@@ -8,7 +8,18 @@ interface WeatherData {
   condition: string
   description: string
   icon: string
-  isGlad?: boolean
+  weatherCode?: number
+  heeftRegen?: boolean
+  heeftSneeuw?: boolean
+  heeftBevriezendeRegen?: boolean
+  heeftMist?: boolean
+  heeftOnweer?: boolean
+}
+
+interface SafetyCheck {
+  label: string
+  passed: boolean
+  reason: string
 }
 
 export default function Home() {
@@ -67,26 +78,82 @@ export default function Home() {
     fetchWeather()
   }, [])
 
-  // Bepaal of het veilig is om te motorrijden
-  const isVeilig = (): boolean | null => {
-    if (!weather) return null
+  // Bepaal veiligheidschecks
+  const getSafetyChecks = (): SafetyCheck[] => {
+    if (!weather) return []
     
     const temp = weather.temp
-    const isGlad = weather.isGlad ?? false
+    const checks: SafetyCheck[] = []
     
-    // Onder 4 graden of glad = niet veilig
-    if (temp < 4 || isGlad) {
-      return false
-    }
+    // Check 1: Temperatuur
+    const tempOk = temp >= 4
+    checks.push({
+      label: 'Temperatuur boven 4°C',
+      passed: tempOk,
+      reason: tempOk 
+        ? `Temperatuur is ${temp.toFixed(1)}°C (veilig)` 
+        : `Temperatuur is ${temp.toFixed(1)}°C (te koud, risico op gladheid)`
+    })
     
-    return true
+    // Check 2: Regen
+    const geenRegen = !weather.heeftRegen
+    checks.push({
+      label: 'Geen regen',
+      passed: geenRegen,
+      reason: geenRegen 
+        ? 'Geen regen (veilig)' 
+        : 'Regen veroorzaakt gladheid en verminderd zicht'
+    })
+    
+    // Check 3: Sneeuw
+    const geenSneeuw = !weather.heeftSneeuw
+    checks.push({
+      label: 'Geen sneeuw',
+      passed: geenSneeuw,
+      reason: geenSneeuw 
+        ? 'Geen sneeuw (veilig)' 
+        : 'Sneeuw veroorzaakt extreme gladheid en zeer slecht zicht'
+    })
+    
+    // Check 4: Bevriezende regen
+    const geenBevriezendeRegen = !weather.heeftBevriezendeRegen
+    checks.push({
+      label: 'Geen bevriezende regen',
+      passed: geenBevriezendeRegen,
+      reason: geenBevriezendeRegen 
+        ? 'Geen bevriezende regen (veilig)' 
+        : 'Bevriezende regen veroorzaakt zeer gevaarlijke gladheid (ijzel)'
+    })
+    
+    // Check 5: Mist
+    const geenMist = !weather.heeftMist
+    checks.push({
+      label: 'Geen mist',
+      passed: geenMist,
+      reason: geenMist 
+        ? 'Geen mist (veilig)' 
+        : 'Mist vermindert zicht aanzienlijk, zeer gevaarlijk voor motorrijders'
+    })
+    
+    // Check 6: Onweer
+    const geenOnweer = !weather.heeftOnweer
+    checks.push({
+      label: 'Geen onweer',
+      passed: geenOnweer,
+      reason: geenOnweer 
+        ? 'Geen onweer (veilig)' 
+        : 'Onweer is gevaarlijk door harde wind, regen en slecht zicht'
+    })
+    
+    return checks
   }
 
-  const veilig = isVeilig()
+  const safetyChecks = getSafetyChecks()
+  const veilig = safetyChecks.length > 0 ? safetyChecks.every(check => check.passed) : null
 
   return (
     <main className="bg-white rounded-[20px] py-16 px-10 shadow-2xl text-center max-w-[600px] w-full">
-      <h1 className="text-4xl font-bold mb-10 text-gray-800 leading-tight">
+      <h1 className="mb-10 text-4xl font-bold leading-tight text-gray-800">
         Kan ik veilig motor rijden?
       </h1>
 
@@ -97,7 +164,7 @@ export default function Home() {
       )}
 
       {error && (
-        <div className="text-xl text-red-600 mt-5">
+        <div className="mt-5 text-xl text-red-600">
           {error}
         </div>
       )}
@@ -110,20 +177,49 @@ export default function Home() {
             {veilig ? 'Ja' : 'Nee'}
           </div>
 
-          <div className="text-lg text-gray-600 mt-5 p-5 bg-gray-100 rounded-lg">
+          <div className="p-5 mt-5 text-lg text-gray-600 bg-gray-100 rounded-lg">
             <div className="mb-2.5">
               <strong>Temperatuur:</strong> {weather.temp.toFixed(1)}°C
             </div>
-            <div className="mb-2.5">
+            <div className="mb-5">
               <strong>Weersomstandigheden:</strong> {weather.description}
             </div>
-            {!veilig && (
-              <div className="mt-4 text-red-600 font-bold">
-                {weather.temp < 4 
-                  ? '⚠️ Temperatuur is onder de 4°C' 
-                  : '⚠️ Gladheid door weersomstandigheden'}
+            
+            <div className="pt-5 mt-6 border-t border-gray-300">
+              <h2 className="mb-4 text-xl font-bold text-gray-800">Veiligheidschecklist</h2>
+              <div className="space-y-3 text-left">
+                {safetyChecks.map((check, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex items-start p-3 rounded-lg ${
+                      check.passed 
+                        ? 'bg-green-50 border border-green-200' 
+                        : 'bg-red-50 border border-red-200'
+                    }`}
+                  >
+                    <div className="flex-shrink-0 mt-0.5 mr-3">
+                      {check.passed ? (
+                        <span className="text-xl text-green-600">✓</span>
+                      ) : (
+                        <span className="text-xl text-red-600">✗</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className={`font-semibold ${
+                        check.passed ? 'text-green-800' : 'text-red-800'
+                      }`}>
+                        {check.label}
+                      </div>
+                      <div className={`text-sm mt-1 ${
+                        check.passed ? 'text-green-700' : 'text-red-700'
+                      }`}>
+                        {check.reason}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </>
       )}
